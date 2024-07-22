@@ -4,13 +4,8 @@ An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre
 
 <details>
   <summary>Demo Video</summary>
-  
-
-
 
 https://github.com/user-attachments/assets/12a9d229-fd8a-4370-b969-1a342360abdf
-
-
 
 </details>
 
@@ -83,3 +78,7 @@ The following hooks where implemented
 In the apps I tested, I found AudioRecord was used for most of them for streaming audio. As for the native hook (which would make phantom mic work on almost ANY app), I had a solution working on my device, but it's very tedious to bring compatibility to all android versions as the internal APIs on which my solution relies change frequently see [AudioRecord.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libaudioclient/AudioRecord.cpp;l=1?q=AudioRecord.cpp&sq=&ss=android%2Fplatform%2Fsuperproject%2Fmain),
 
 If you want to give it a shot, clone the branch native_hook and edit main.cpp (also return true in MainHook.isNativeHook)
+
+# Links
+
+[XDA Thread](https://xdaforums.com/t/mod-xposed-phantom-mic-simulate-microphone-input-from-audio-file.4682767/#post-89623099)
