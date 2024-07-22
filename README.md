@@ -4,12 +4,15 @@ An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre
 
 ## Tested Apps
 
-| Application        | Status    |
-| ------------------ | --------- |
-| Facebook Messenger | ✔ Working |
-| Discord            | ✔ Working |
-| Telegram           | ✔ Working |
-| .. You tell me!    |           |
+| Application        | Status        |
+| ------------------ | ------------- |
+| Facebook Messenger | ✔ Working     |
+| Discord            | ✔ Working     |
+| Telegram           | ✔ Working     |
+| Whatsapp           | ❌ Not working |
+| .. You tell me!    |               |
+
+Read **Developer Notes** for not working apps``
 
 Note: your app might work if it's not on the list, let us know if you tried it!
 
@@ -63,6 +66,8 @@ The following hooks where implemented
 
 - [ ] android.media.MediaRecorder
 
-- [ ] libOpenSLES.so
+- [ ] native hook
 
-In the apps I tested, I only found AudioRecord was used for streaming audio. For MediaRecorder, I intentionally didn't hook it because it can only save audio to files (not stream audio like in calls). As for libOpenSLES.so, it might also be used by some apps, but I haven't found any yet. Please open an issue if your target app uses one of these APIs.
+In the apps I tested, I found AudioRecord was used for most of them for streaming audio. As for the native hook (which would make phantom mic work on almost ANY app), I had a solution working on my device, but it's very tedious to bring compatibility to all android versions as the internal APIs change frequently on which my solution relies change frequently see [AudioRecord.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libaudioclient/AudioRecord.cpp;l=1?q=AudioRecord.cpp&sq=&ss=android%2Fplatform%2Fsuperproject%2Fmain),
+
+If you want to give it a shot, clone the branch native_hook and edit main.cpp (also return true in MainHook.isNativeHook)
