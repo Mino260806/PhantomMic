@@ -37,6 +37,7 @@ public class PhantomManager {
 
     private final AudioMaster mAudioMaster;
     private final SPManager mSPManager;
+    private final FileManager mFileManager;
     private String mFileName = null;
     private boolean mNeedPrepare = true;
 
@@ -47,6 +48,7 @@ public class PhantomManager {
 
         mAudioMaster = new AudioMaster();
         mSPManager = new SPManager(context);
+        mFileManager = new FileManager(context);
     }
 
     public void interceptIntent(Intent intent) {
@@ -57,35 +59,34 @@ public class PhantomManager {
     }
     public void prepare(Activity activity) {
         mNeedPrepare = false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (mSPManager.getUriPath() == null) {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        if (mSPManager.getUriPath() == null) {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, getDefaultUriPath());
+            }
 
-                ActivityResultWrapper arWrapper = new ActivityResultWrapper(activity, REQUEST_CODE);
-                arWrapper.start(intent, (resultCode, resultData) -> {
-                    if (resultCode == Activity.RESULT_OK) {
-                        if (resultData != null && resultData.getData() != null) {
-                            Uri uri = resultData.getData();
-                            // Perform operations on the document using its URI.
-                            final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
-                            // Check for the freshest data.
-                            getContentResolver().takePersistableUriPermission(uri, takeFlags);
+            ActivityResultWrapper arWrapper = new ActivityResultWrapper(activity, REQUEST_CODE);
+            arWrapper.start(intent, (resultCode, resultData) -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    if (resultData != null && resultData.getData() != null) {
+                        Uri uri = resultData.getData();
+                        // Perform operations on the document using its URI.
+                        final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+                        // Check for the freshest data.
+                        getContentResolver().takePersistableUriPermission(uri, takeFlags);
 
-                            mSPManager.setUriPath(uri);
-                            mUriPath = uri;
+                        mSPManager.setUriPath(uri);
+                        mUriPath = uri;
 
-                            Logger.d("Saved uri " + mUriPath);
-                        }
+                        Logger.d("Saved uri " + mUriPath);
                     }
-                });
-            }
-            else {
-                mUriPath = mSPManager.getUriPath();
-            }
-        } else {
-            mUriPath = getDefaultUriPath();
+                }
+            });
+        }
+        else {
+            mUriPath = mSPManager.getUriPath();
         }
         Logger.d("PhantomManager.prepare done");
     }
@@ -107,13 +108,7 @@ public class PhantomManager {
 
         ensureHasUriPath();
 
-        FileDescriptor fd;
-        if ("content".equals(mUriPath.getScheme())) {
-            fd = openFileDescriptorWithDocumentFile(mFileName);
-        }
-        else {
-            fd = openFileDescriptorWithFile(mFileName);
-        }
+        FileDescriptor fd = mFileManager.openAudioWithName(mUriPath, mFileName);
 
         if (fd == null) {
             Toast.makeText(mContext.get(), "Could not open file", Toast.LENGTH_SHORT).show();
@@ -132,70 +127,9 @@ public class PhantomManager {
         }
     }
 
-    private FileDescriptor openFileDescriptorWithFile(String fileName) {
-        String path = mUriPath.getPath();
-
-        if (path != null) {
-            File directory = new File(path);
-            if (directory.isDirectory()) {
-                File[] files = directory.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.isFile()) {
-                            String nameWithoutExtension = file.getName().replaceFirst("[.][^.]+$", "");
-                            if (nameWithoutExtension.equals(fileName)) {
-                                try {
-                                    FileInputStream fin = new FileInputStream(file);
-                                    return fin.getFD();
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private FileDescriptor openFileDescriptorWithDocumentFile(String fileName) {
-        // Create a DocumentFile from the tree URI
-        DocumentFile directory = DocumentFile.fromTreeUri(mContext.get(), mUriPath);
-
-        if (directory != null && directory.isDirectory()) {
-            for (DocumentFile file : directory.listFiles()) {
-                if (file.isFile() && file.getName() != null && file.getName().startsWith(fileName + ".")
-                        && file.getType() != null && file.getType().startsWith("audio/")) {
-                    Logger.d("Loading file " + file.getName());
-
-                    Uri fileUri = file.getUri();
-                    try {
-                        ParcelFileDescriptor fd = getContentResolver().openFileDescriptor(fileUri, "r");
-                        tobeClosed = fd;
-                        return fd.getFileDescriptor();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        } else {
-            Logger.d("Directory not found or is not a directory.");
-        }
-
-        return null;
-    }
-
     public void unload() {
         mAudioMaster.unload();
-        if (tobeClosed != null) {
-            try {
-                tobeClosed.close();
-                tobeClosed = null;
-            } catch (IOException ignored) {
-            }
-        }
+        mFileManager.close();
         Logger.d("Done unloading data");
     }
 
