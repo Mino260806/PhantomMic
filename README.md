@@ -8,6 +8,7 @@ An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre
 | ------------------ | --------- |
 | Facebook Messenger | ✔ Working |
 | Discord            | ✔ Working |
+| Telegram           | ✔ Working |
 | .. You tell me!    |           |
 
 Note: your app might work if it's not on the list, let us know if you tried it!
