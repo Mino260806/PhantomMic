@@ -68,6 +68,6 @@ The following hooks where implemented
 
 - [ ] native hook
 
-In the apps I tested, I found AudioRecord was used for most of them for streaming audio. As for the native hook (which would make phantom mic work on almost ANY app), I had a solution working on my device, but it's very tedious to bring compatibility to all android versions as the internal APIs change frequently on which my solution relies change frequently see [AudioRecord.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libaudioclient/AudioRecord.cpp;l=1?q=AudioRecord.cpp&sq=&ss=android%2Fplatform%2Fsuperproject%2Fmain),
+In the apps I tested, I found AudioRecord was used for most of them for streaming audio. As for the native hook (which would make phantom mic work on almost ANY app), I had a solution working on my device, but it's very tedious to bring compatibility to all android versions as the internal APIs on which my solution relies change frequently see [AudioRecord.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libaudioclient/AudioRecord.cpp;l=1?q=AudioRecord.cpp&sq=&ss=android%2Fplatform%2Fsuperproject%2Fmain),
 
 If you want to give it a shot, clone the branch native_hook and edit main.cpp (also return true in MainHook.isNativeHook)
