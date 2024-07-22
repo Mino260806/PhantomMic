@@ -2,6 +2,10 @@
 
 An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre-recorded audio file, useful for **automating audio calls** 
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/184a245f-52d0-4933-b8d8-69284e910791" />
+</p>
+
 <details>
   <summary>Demo Video (With Audio)</summary>
   
