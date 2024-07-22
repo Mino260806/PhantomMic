@@ -6,7 +6,11 @@ An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre
   <summary>Demo</summary>
   
 
-  [![Demo Video](demo/demo.mp4)]
+
+
+https://github.com/user-attachments/assets/12a9d229-fd8a-4370-b969-1a342360abdf
+
+
 
 </details>
 
