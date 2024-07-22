@@ -28,6 +28,8 @@ public class PhantomManager {
 
     private static final String KEY_INTENT_FILE = "tn.amin.phantom_mic.AUDIO_FILE";
 
+    private static final String FILE_CONFIG = "phantom.txt";
+
     private static final int REQUEST_CODE = 2608;
 
     private Uri mUriPath;
@@ -38,7 +40,6 @@ public class PhantomManager {
     private final AudioMaster mAudioMaster;
     private final SPManager mSPManager;
     private final FileManager mFileManager;
-    private String mFileName = null;
     private boolean mNeedPrepare = true;
 
     public PhantomManager(Context context) {
@@ -52,10 +53,10 @@ public class PhantomManager {
     }
 
     public void interceptIntent(Intent intent) {
-        if (intent.getExtras() != null && intent.getExtras().containsKey(KEY_INTENT_FILE)) {
-            mFileName = intent.getExtras().getString(KEY_INTENT_FILE);
-            intent.getExtras().remove(KEY_INTENT_FILE);
-        }
+//        if (intent.getExtras() != null && intent.getExtras().containsKey(KEY_INTENT_FILE)) {
+//            mFileName = intent.getExtras().getString(KEY_INTENT_FILE);
+//            intent.getExtras().remove(KEY_INTENT_FILE);
+//        }
     }
     public void prepare(Activity activity) {
         mNeedPrepare = false;
@@ -102,13 +103,15 @@ public class PhantomManager {
     }
 
     public void load() {
-        if (mFileName == null) {
-            mFileName = "default";
-        }
-
         ensureHasUriPath();
 
-        FileDescriptor fd = mFileManager.openAudioWithName(mUriPath, mFileName);
+        String fileName = mFileManager.readLine(mUriPath, FILE_CONFIG);
+        if (fileName == null || fileName.trim().isEmpty()) {
+            Logger.d("No audio file specified");
+            return;
+        }
+
+        FileDescriptor fd = mFileManager.openAudioWithName(mUriPath, fileName.trim());
 
         if (fd == null) {
             Toast.makeText(mContext.get(), "Could not open file", Toast.LENGTH_SHORT).show();
