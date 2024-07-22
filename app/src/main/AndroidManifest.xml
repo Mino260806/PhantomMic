@@ -22,7 +22,7 @@
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="Redirect your microphone input to an audio file" />
+            android:value="Simulate microphone input from an audio file" />
         <meta-data
             android:name="xposedminversion"
             android:value="93" />
