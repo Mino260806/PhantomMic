@@ -2,6 +2,7 @@ package tn.amin.phantom_mic;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.media.AudioRecord;
 import android.os.Bundle;
 import android.os.PersistableBundle;
@@ -18,14 +19,20 @@ import tn.amin.phantom_mic.log.Logger;
 public class MainHook implements IXposedHookLoadPackage {
     private PhantomManager phantomManager = null;
 
-    boolean needHook = true;
+    private boolean needHook = true;
 
-    int accBytes = 0;
+    private String packageName;
+
+    private int accBytes = 0;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (needHook) {
             needHook = false;
+
+            packageName = lpparam.packageName;
+            System.loadLibrary("xposedlab");
+
             Logger.d("Beginning hook");
             doHook(lpparam);
             Logger.d("Successful hook");
@@ -170,7 +177,7 @@ public class MainHook implements IXposedHookLoadPackage {
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 Application application = (Application) param.args[0];
                 if (phantomManager == null) {
-                    phantomManager = new PhantomManager(application.getApplicationContext());
+                    initPhantomManager(application.getApplicationContext());
                 }
             }
         });
@@ -178,7 +185,7 @@ public class MainHook implements IXposedHookLoadPackage {
 
     private void onActivityObtained(Activity activity) {
         if (phantomManager == null) {
-            phantomManager = new PhantomManager(activity.getApplicationContext());
+            initPhantomManager(activity.getApplicationContext());
         }
 
         if (phantomManager.needPrepare()) {
@@ -187,5 +194,13 @@ public class MainHook implements IXposedHookLoadPackage {
 //            phantomManager.updateAudioFormat(48000, AudioFormat.CHANNEL_IN_MONO, 2);
 //            phantomManager.load(null);
         }
+    }
+
+    private void initPhantomManager(Context context) {
+        phantomManager = new PhantomManager(context, isNativeHook());
+    }
+
+    public boolean isNativeHook() {
+        return packageName.equals("com.whatsapp");
     }
 }

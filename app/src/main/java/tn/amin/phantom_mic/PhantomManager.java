@@ -42,7 +42,7 @@ public class PhantomManager {
     private final FileManager mFileManager;
     private boolean mNeedPrepare = true;
 
-    public PhantomManager(Context context) {
+    public PhantomManager(Context context, boolean isNativeHook) {
         Logger.d("Init phantom manager");
 
         mContext = new WeakReference<>(context);
@@ -50,6 +50,10 @@ public class PhantomManager {
         mAudioMaster = new AudioMaster();
         mSPManager = new SPManager(context);
         mFileManager = new FileManager(context);
+
+        if (isNativeHook) {
+            nativeHook();
+        }
     }
 
     public void interceptIntent(Intent intent) {
@@ -155,4 +159,6 @@ public class PhantomManager {
     public boolean needPrepare() {
         return mNeedPrepare;
     }
+
+    private native void nativeHook();
 }

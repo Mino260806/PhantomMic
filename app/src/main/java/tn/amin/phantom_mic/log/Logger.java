@@ -11,6 +11,6 @@ public class Logger {
 
 
     public static void st() {
-        XposedBridge.log(Log.getStackTraceString(new Throwable()));
+        Logger.d(Log.getStackTraceString(new Throwable()));
     }
 }
