@@ -1,12 +1,8 @@
 # Phantom Mic
 
-__________________
-
 An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre-recorded audio file, useful for **automating audio calls** 
 
 ## Tested Apps
-
------
 
 | Application        | Status    |
 | ------------------ | --------- |
@@ -17,8 +13,6 @@ An LSPosed (Xposed/Edxposed) module to simulate microphone input 🎤 from a pre
 Note: your app might work if it's not on the list, let us know if you tried it!
 
 ## Usage Guide
-
--------
 
 - Enable the module for your target app
 
@@ -54,8 +48,6 @@ music.mp3
 
 ## Requirements
 
-_______
-
 - Android 7+
 
 - [Root] LSPosed / Edxposed
@@ -63,8 +55,6 @@ _______
 - [No Root] LSPatch theoretically works but not tested
 
 ## Developer Notes
-
-_____
 
 The following hooks where implemented
 
