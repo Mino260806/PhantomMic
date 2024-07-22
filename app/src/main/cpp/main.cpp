@@ -20,16 +20,6 @@
 #include "And64InlineHook/And64InlineHook.hpp"
 #include "InlineHook/InlineHook.hpp"
 
-extern "C" {
-    #include "ffmpeg/libavformat/avformat.h"
-    #include "ffmpeg/libavcodec/avcodec.h"
-    #include "ffmpeg/libavutil/avutil.h"
-    #include "ffmpeg/libavutil/imgutils.h"
-    #include "ffmpeg/libavutil/channel_layout.h"
-    #include "ffmpeg/libavutil/frame.h"
-    #include "ffmpeg/libswresample/swresample.h"
-};
-
 HookFunType hook_func;
 UnhookFunType unhook_func;
 

@@ -23,15 +23,6 @@ add_library(xposedlab SHARED main.cpp ${KITTYMEMORY_SRC} ${AND64INLINEHOOK_SRC}
 target_include_directories(xposedlab PRIVATE KittyMemory And64InlineHook InlineHook libutils binder
         minimp3 libsamplerate mpg123 AudioFile ffmpeg)
 target_link_libraries(xposedlab -llog ${KEYSTONE_LIB})
-target_link_libraries(xposedlab -llog
-        ${JNILIBS}/libavdevice-57.so
-        ${JNILIBS}/libpostproc-54.so
-        ${JNILIBS}/libswresample-2.so
-        ${JNILIBS}/libavformat-57.so
-        ${JNILIBS}/libswscale-4.so
-        ${JNILIBS}/libavutil-55.so
-        ${JNILIBS}/libavfilter-6.so
-        ${JNILIBS}/libavcodec-57.so)
 
 include_directories(${ANDROID_NDK}/sysroot/usr/include)
 
