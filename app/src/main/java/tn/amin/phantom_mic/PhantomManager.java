@@ -53,8 +53,6 @@ public class PhantomManager {
         if (intent.getExtras() != null && intent.getExtras().containsKey(KEY_INTENT_FILE)) {
             mFileName = intent.getExtras().getString(KEY_INTENT_FILE);
             intent.getExtras().remove(KEY_INTENT_FILE);
-
-            Toast.makeText(mContext.get(), "File name is " + mFileName, Toast.LENGTH_LONG).show();
         }
     }
     public void prepare(Activity activity) {
