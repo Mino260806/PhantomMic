@@ -229,15 +229,23 @@ public class AudioMaster {
         return true;
     }
 
+    public byte[] getBuffer(int offset, int size) {
+        if (offset + size > mBuffer.size()) {
+            return null;
+        }
+        return mBuffer.getBuffer();
+    }
+
     public void setFormat(AudioFormat format) {
         mOutFormat = format;
     }
 
-    public void setFormat(int sampleRate, int channelConfig, int encoding) {
+    public void setFormat(int sampleRate, int channelMask, int encoding) {
         mOutFormat = new AudioFormat.Builder()
                 .setSampleRate(sampleRate)
-                .setChannelMask(getChannelMaskFromLegacyConfig(channelConfig,
-                        true/*allow legacy configurations*/))
+//                .setChannelMask(getChannelMaskFromLegacyConfig(channelConfig,
+//                        true/*allow legacy configurations*/))
+                .setChannelMask(channelMask)
                 .setEncoding(encoding)
                 .setSampleRate(sampleRate)
                 .build();

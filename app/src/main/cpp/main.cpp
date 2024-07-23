@@ -22,6 +22,7 @@
 #include "KittyMemory/KittyInclude.hpp"
 #include "And64InlineHook/And64InlineHook.hpp"
 #include "InlineHook/InlineHook.hpp"
+#include "PhantomBridge.h"
 
 extern "C" {
     #include "ffmpeg/libavformat/avformat.h"
@@ -33,16 +34,18 @@ extern "C" {
     #include "ffmpeg/libswresample/swresample.h"
 };
 
-jobject g_phantomManager;
+jobject j_phantomManager;
 
 JavaVM* JVM;
-JNIEnv *g_env;
+PhantomBridge* g_phantomBridge;
 
 HookFunType hook_func;
 UnhookFunType unhook_func;
 
 bool need_log = true;
 size_t acc_frame_count = 0;
+int acc_offset = 0;
+JNIEnv* obtainBuffer_env = nullptr;
 
 int32_t (*obtainBuffer_backup)(void*, void*, void*, void*, void*);
 int32_t  obtainBuffer_hook(void* v0, void* v1, void* v2, void* v3, void* v4) {
@@ -52,26 +55,76 @@ int32_t  obtainBuffer_hook(void* v0, void* v1, void* v2, void* v3, void* v4) {
     size_t frameSize = size / frameCount;
     void* raw = * (void**) ((uintptr_t) v1 + sizeof(size_t) * 2);
 
-    acc_frame_count += frameCount;
+//    if (obtainBuffer_env == nullptr) {
+//    }
+    JVM->AttachCurrentThread(&obtainBuffer_env, nullptr);
+    jbyte* buffer = g_phantomBridge->get_buffer(obtainBuffer_env, acc_offset, size);
 
 //    memset(raw, 0x7f, size);
-//    if (audio_offset + size <= pcm_data_size) {
-//        LOGI("Overwriting data");
-//        memcpy(raw, pcm_data + audio_offset, size);
-//        audio_offset += size;
-//    }
+    if (buffer != nullptr) {
+        LOGI("Overwriting data");
+        memcpy(raw, buffer+acc_offset, size);
 
-    if (need_log) {
-        need_log = false;
+        g_phantomBridge->release_buffer(obtainBuffer_env, buffer);
     }
 
     LOGI("[%zu] Inside obtainBuffer (%zu x %zu = %zu)", acc_frame_count, frameCount, frameSize, size);
+
+    acc_frame_count += frameCount;
+    acc_offset += size;
     return status;
 }
 
-void set_symbol_hook(user_pt_regs* regs) {
-    LOGI("Create engine");
+int (*log_backup)(int prio, const char* tag, const char* fmt, ...);
+int  log_hook(int prio, const char* tag, const char* fmt, ...) {
+//    if (strstr(format, "inputSource %d, sampleRate %u, format %#x, channelMask %#x, frameCount %zu") != nullptr) {
+//        unhook_func((void*) __android_log_print);
+//
+//        LOGI("Found out target");
+//
+//        hook_func((void*) __android_log_print, (void*) vsnprintf_hook, (void**) &vsnprintf_backup);
+//    }
+    va_list args;
+    va_start(args, fmt);
+    int result = __android_log_vprint(prio, tag, fmt, args);
+
+    if (tag != nullptr && strcmp(tag, "AudioRecord") == 0
+            && strstr(fmt, "inputSource %d, sampleRate %u, format %#x, channelMask %#x, frameCount %zu") != nullptr) {
+        va_arg(args, char*);
+        int inputSource = va_arg(args, int);
+        int sampleRate = va_arg(args, int);
+        int audioFormat = va_arg(args, int);
+        int channelMask = va_arg(args, int);
+        int frameCount = va_arg(args, int);
+
+        LOGI("Sample Rate: %d", sampleRate);
+        LOGI("Audio Format: %d", audioFormat);
+        LOGI("Channel Mask: %d", channelMask);
+        LOGI("Frame Count: %d", frameCount);
+
+        JNIEnv* env;
+        JVM->AttachCurrentThread(&env, nullptr);
+        g_phantomBridge->update_audio_format(env, sampleRate, audioFormat, channelMask);
+        g_phantomBridge->load(env);
+    }
+
+    va_end(args);
+
+    return result;
 }
+
+//
+//void __android_log_print_hook(user_pt_regs* regs) {
+//    if (regs->regs[1] != 0) {
+//        if (strcmp(reinterpret_cast<const char *>(regs->regs[1]), LOG_TAG) == 0) {
+//            return;
+//        }
+//
+//        if (strcmp(reinterpret_cast<const char *>(regs->regs[1]), "AudioRecord") == 0) {
+//            LOGI("Found our target %");
+//        }
+//    }
+//}
 
 void on_library_loaded(const char *name, void *handle) {
 //    LOGI("Library Loaded %s", name);
@@ -99,26 +152,16 @@ NativeOnModuleLoaded native_init(const NativeAPIEntries *entries) {
 extern "C"
 JNIEXPORT void JNICALL
 Java_tn_amin_phantom_1mic_PhantomManager_nativeHook(JNIEnv *env, jobject thiz) {
-    g_env = env;
-
-    g_phantomManager = thiz;
+    j_phantomManager = env->NewGlobalRef(thiz);
+    g_phantomBridge = new PhantomBridge(j_phantomManager);
 
     LOGI("Doing c++ hook");
 
-    ElfScanner g_libTargetELF = ElfScanner::createWithPath("libOpenSLES.so");
+    ElfScanner g_libTargetELF = ElfScanner::createWithPath("libaudioclient.so");
 
-    // TODO find function to hook
-//    uintptr_t obtainBuffer_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
-//    LOGI("obtainBuffer Symbol at %p (%s)", (void*) obtainBuffer_symbol, "_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
-//    uintptr_t create_engine_symbol = g_libTargetELF.findSymbol("slCreateEngine");
-//    LOGI("setAudioRecord Symbol at %p (%s)", (void*) create_engine_symbol, "slCreateEngine");
-//    uintptr_t start_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord5startENS_11AudioSystem12sync_event_tE15audio_session_t");
-//    LOGI("createAudioRecord at %p (%s)", (void*) start_symbol, "_ZN7android11AudioRecord5startENS_11AudioSystem12sync_event_tE15audio_session_t");
+    uintptr_t obtainBuffer_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
+    LOGI("AudioRecord::obtainBuffer Symbol at %p (%s)", (void*) obtainBuffer_symbol, "_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
 
-//    hook_func((void*) obtainBuffer_symbol, (void*) obtainBuffer_hook, (void**) &obtainBuffer_backup);
-//    ModifyIBored(create_engine_symbol, set_symbol_hook);
-//        A64HookFunction((void*) set_symbol, (void*) createRecord_hook, (void**) &createRecord_backup);
-//        ModifyIBored(set_symbol, modifyIBored);
-//        ModifyIBored(start_symbol, modifyIBored2);
-//        ModifyIBored((uintptr_t) check_service_symbol, modifyIBored3);
+    hook_func((void*) obtainBuffer_symbol, (void*) obtainBuffer_hook, (void**) &obtainBuffer_backup);
+    hook_func((void*) __android_log_print, (void*) log_hook, (void**) &log_backup);
 }

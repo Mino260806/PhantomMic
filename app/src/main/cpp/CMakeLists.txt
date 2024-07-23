@@ -12,16 +12,18 @@ set(KEYSTONE_LIB ${KITTYMEMORY_PATH}/Deps/Keystone/libs-android/${CMAKE_ANDROID_
 set(AND64INLINEHOOK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/And64InlineHook)
 file(GLOB AND64INLINEHOOK_SRC ${AND64INLINEHOOK_PATH}/*.cpp)
 
+set(PHANTOM_PATH ${CMAKE_CURRENT_SOURCE_DIR}/phantom)
+file(GLOB PHANTOM_SRC ${PHANTOM_PATH}/*.cpp)
+
 set(INLINEHOOK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/InlineHook)
 file(GLOB INLINEHOOK_SRC_CPP ${INLINEHOOK_PATH}/*.cpp)
 file(GLOB INLINEHOOK_SRC_C ${INLINEHOOK_PATH}/*.c)
 file(GLOB INLINEHOOK_SRC_S ${INLINEHOOK_PATH}/*.s)
 
 add_library(xposedlab SHARED main.cpp ${KITTYMEMORY_SRC} ${AND64INLINEHOOK_SRC}
-        ${INLINEHOOK_SRC_CPP} ${INLINEHOOK_SRC_C} ${INLINEHOOK_SRC_S})
+        ${INLINEHOOK_SRC_CPP} ${INLINEHOOK_SRC_C} ${INLINEHOOK_SRC_S} ${PHANTOM_SRC})
 
-target_include_directories(xposedlab PRIVATE KittyMemory And64InlineHook InlineHook libutils binder
-        minimp3 libsamplerate mpg123 AudioFile ffmpeg)
+target_include_directories(xposedlab PRIVATE KittyMemory And64InlineHook InlineHook phantom ffmpeg)
 target_link_libraries(xposedlab -llog ${KEYSTONE_LIB})
 target_link_libraries(xposedlab -llog
         ${JNILIBS}/libavdevice-57.so

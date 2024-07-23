@@ -101,8 +101,8 @@ public class PhantomManager {
         return Uri.fromFile(defaultPath);
     }
 
-    public void updateAudioFormat(int sampleRate, int channelConfig, int encoding) {
-        mAudioMaster.setFormat(sampleRate, channelConfig, encoding);
+    public void updateAudioFormat(int sampleRate, int channelMask, int encoding) {
+        mAudioMaster.setFormat(sampleRate, channelMask, encoding);
         Logger.d("Target: " + sampleRate + "Hz, encoding " + encoding + ", channel count " + mAudioMaster.getFormat().getChannelCount());
     }
 
@@ -127,6 +127,10 @@ public class PhantomManager {
         Logger.d("Audio file loaded");
     }
 
+    public byte[] getBuffer(int offset, int size) {
+        return mAudioMaster.getBuffer(offset, size);
+    }
+
     private void ensureHasUriPath() {
         if (mUriPath == null) {
             mUriPath = Uri.fromFile(new File(mContext.get().getExternalFilesDir(null), DEFAULT_RECORDINGS_PATH));
@@ -142,18 +146,6 @@ public class PhantomManager {
 
     private ContentResolver getContentResolver() {
         return mContext.get().getContentResolver();
-    }
-
-    public boolean onDataRead(byte[] audioData, int i, int bytesRead) {
-        return mAudioMaster.getData(audioData, 0, bytesRead);
-    }
-
-    public boolean onDataRead(short[] audioData, int i, int bytesRead) {
-        return mAudioMaster.getData(audioData, 0, bytesRead);
-    }
-
-    public boolean onDataRead(float[] audioData, int i, int bytesRead) {
-        return mAudioMaster.getData(audioData, 0, bytesRead);
     }
 
     public boolean needPrepare() {
