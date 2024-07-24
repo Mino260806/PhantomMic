@@ -15,14 +15,22 @@ public:
 
     void load(JNIEnv* env);
 
-    jbyte* get_buffer(JNIEnv* env, int offset, int size);
+    void on_buffer_chunk_loaded(jbyte* buffer, jsize size);
 
-    void release_buffer(JNIEnv* env, jbyte* buffer);
+    bool overwrite_buffer(char* buffer, int size);
+
+    void on_load_done();
+
+    void unload(JNIEnv *env);
 
 private:
     jobject j_phantomManager;
 
-    jbyteArray j_toBeReleasedBuffer;
+    bool m_buffer_loaded = false;
+    int m_buffer_size = 16384;
+    int m_buffer_write_position = 0;
+    int m_buffer_read_position = 0;
+    jbyte* m_buffer = nullptr;
 };
 
 #endif //PHANTOMMIC_PHANTOMBRIDGE_H

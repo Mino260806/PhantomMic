@@ -1,5 +1,8 @@
 #include <cstdint>
+#include <malloc.h>
+#include <memory>
 #include "PhantomBridge.h"
+#include "../logging.h"
 
 #define ENCODING_PCM_16BIT          2
 #define ENCODING_PCM_24BIT_PACKED   21
@@ -37,22 +40,55 @@ void PhantomBridge::load(JNIEnv *env) {
     env->CallVoidMethod(j_phantomManager, method);
 }
 
-jbyte *PhantomBridge::get_buffer(JNIEnv *env, int offset, int size) {
-    jclass j_phantomManagerClass = env->GetObjectClass(j_phantomManager);
-    jmethodID method = env->GetMethodID(j_phantomManagerClass, "getBuffer", "(II)[B");
-    jbyteArray byteArray = (jbyteArray) env->CallObjectMethod(j_phantomManager, method);
-
-    jbyte *buffer = nullptr;
-    if (byteArray != nullptr) {
-        j_toBeReleasedBuffer = byteArray;
-        buffer = env->GetByteArrayElements(byteArray, nullptr);
-    }
-    return buffer;
-}
-
-void PhantomBridge::release_buffer(JNIEnv *env, jbyte *buffer) {
-    env->ReleaseByteArrayElements(j_toBeReleasedBuffer, buffer, 0);
-    j_toBeReleasedBuffer = nullptr;
-}
-
 PhantomBridge::PhantomBridge(jobject j_phantomManager) : j_phantomManager(j_phantomManager) {}
+
+void PhantomBridge::on_buffer_chunk_loaded(jbyte *buffer, jsize size) {
+    if (m_buffer == nullptr) {
+        m_buffer = (jbyte*) malloc(m_buffer_size);
+    }
+
+    while (m_buffer_write_position + size > m_buffer_size) {
+        m_buffer_size *= 2;
+        m_buffer = (jbyte*) realloc(m_buffer, m_buffer_size);
+    }
+
+    memcpy(m_buffer + m_buffer_write_position, buffer, size);
+    m_buffer_write_position += size;
+}
+
+bool PhantomBridge::overwrite_buffer(char* buffer, int size) {
+    if (m_buffer_read_position + size > m_buffer_write_position) {
+        if (m_buffer_loaded) {
+            int until_bounds = m_buffer_write_position - m_buffer_read_position;
+            overwrite_buffer(buffer, until_bounds);
+            m_buffer_read_position = 0;
+            return overwrite_buffer(buffer + until_bounds, size - until_bounds);
+        }
+        return false;
+    }
+
+    memcpy(buffer, m_buffer + m_buffer_read_position, size);
+    m_buffer_read_position += size;
+
+    return true;
+}
+
+void PhantomBridge::on_load_done() {
+    m_buffer_loaded = true;
+}
+
+void PhantomBridge::unload(JNIEnv *env) {
+    if (m_buffer != nullptr) {
+        free(m_buffer);
+        m_buffer = nullptr;
+
+        m_buffer_loaded = false;
+        m_buffer_size = 16384;
+        m_buffer_write_position = 0;
+        m_buffer_read_position = 0;
+
+        jclass j_phantomManagerClass = env->GetObjectClass(j_phantomManager);
+        jmethodID method = env->GetMethodID(j_phantomManagerClass, "unload", "()V");
+        env->CallVoidMethod(j_phantomManager, method);
+    }
+}

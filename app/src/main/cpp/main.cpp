@@ -53,19 +53,10 @@ int32_t  obtainBuffer_hook(void* v0, void* v1, void* v2, void* v3, void* v4) {
     size_t frameCount = * (size_t*) v1;
     size_t size = * (size_t*) ((uintptr_t) v1 + sizeof(size_t));
     size_t frameSize = size / frameCount;
-    void* raw = * (void**) ((uintptr_t) v1 + sizeof(size_t) * 2);
+    char* raw = * (char**) ((uintptr_t) v1 + sizeof(size_t) * 2);
 
-//    if (obtainBuffer_env == nullptr) {
-//    }
-    JVM->AttachCurrentThread(&obtainBuffer_env, nullptr);
-    jbyte* buffer = g_phantomBridge->get_buffer(obtainBuffer_env, acc_offset, size);
-
-//    memset(raw, 0x7f, size);
-    if (buffer != nullptr) {
-        LOGI("Overwriting data");
-        memcpy(raw, buffer+acc_offset, size);
-
-        g_phantomBridge->release_buffer(obtainBuffer_env, buffer);
+    if (g_phantomBridge->overwrite_buffer(raw, size)) {
+        LOGI("Overwritten data");
     }
 
     LOGI("[%zu] Inside obtainBuffer (%zu x %zu = %zu)", acc_frame_count, frameCount, frameSize, size);
@@ -73,6 +64,16 @@ int32_t  obtainBuffer_hook(void* v0, void* v1, void* v2, void* v3, void* v4) {
     acc_frame_count += frameCount;
     acc_offset += size;
     return status;
+}
+
+void (*stop_backup)(void*);
+void  stop_hook(void* thiz) {
+    stop_backup(thiz);
+
+    JNIEnv* env;
+    JVM->AttachCurrentThread(&env, nullptr);
+    LOGI("AudioRecord::stop()");
+    g_phantomBridge->unload(env);
 }
 
 int (*log_backup)(int prio, const char* tag, const char* fmt, ...);
@@ -161,7 +162,27 @@ Java_tn_amin_phantom_1mic_PhantomManager_nativeHook(JNIEnv *env, jobject thiz) {
 
     uintptr_t obtainBuffer_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
     LOGI("AudioRecord::obtainBuffer Symbol at %p (%s)", (void*) obtainBuffer_symbol, "_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
+    uintptr_t stop_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord4stopEv");
+    LOGI("AudioRecord::stop Symbol at %p (%s)", (void*) obtainBuffer_symbol, "_ZN7android11AudioRecord4stopEv");
 
     hook_func((void*) obtainBuffer_symbol, (void*) obtainBuffer_hook, (void**) &obtainBuffer_backup);
+    hook_func((void*) stop_symbol, (void*) stop_hook, (void**) &stop_backup);
     hook_func((void*) __android_log_print, (void*) log_hook, (void**) &log_backup);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_tn_amin_phantom_1mic_audio_AudioMaster_onBufferChunkLoaded(JNIEnv *env, jobject thiz,
+                                                                jbyteArray buffer_chunk) {
+    jbyte* buffer = env->GetByteArrayElements(buffer_chunk, nullptr);
+    int size = env->GetArrayLength(buffer_chunk);
+
+    g_phantomBridge->on_buffer_chunk_loaded(buffer, size);
+
+    env->ReleaseByteArrayElements(buffer_chunk, buffer, 0);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_tn_amin_phantom_1mic_audio_AudioMaster_onLoadDone(JNIEnv *env, jobject thiz) {
+    g_phantomBridge->on_load_done();
 }

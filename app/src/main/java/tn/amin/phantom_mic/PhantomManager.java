@@ -127,10 +127,6 @@ public class PhantomManager {
         Logger.d("Audio file loaded");
     }
 
-    public byte[] getBuffer(int offset, int size) {
-        return mAudioMaster.getBuffer(offset, size);
-    }
-
     private void ensureHasUriPath() {
         if (mUriPath == null) {
             mUriPath = Uri.fromFile(new File(mContext.get().getExternalFilesDir(null), DEFAULT_RECORDINGS_PATH));
