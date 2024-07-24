@@ -23,6 +23,7 @@
 #include "And64InlineHook/And64InlineHook.hpp"
 #include "InlineHook/InlineHook.hpp"
 #include "PhantomBridge.h"
+#include "hook_compat.h"
 
 extern "C" {
     #include "ffmpeg/libavformat/avformat.h"
@@ -140,12 +141,12 @@ Java_tn_amin_phantom_1mic_PhantomManager_nativeHook(JNIEnv *env, jobject thiz) {
 
     LOGI("Doing c++ hook");
 
-    ElfScanner g_libTargetELF = ElfScanner::createWithPath("libaudioclient.so");
+    ElfScanner g_libTargetELF = ElfScanner::createWithPath(HookCompat::get_library_name());
 
-    uintptr_t obtainBuffer_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
-    LOGI("AudioRecord::obtainBuffer Symbol at %p (%s)", (void*) obtainBuffer_symbol, "_ZN7android11AudioRecord12obtainBufferEPNS0_6BufferEPK8timespecPS3_Pm");
-    uintptr_t stop_symbol = g_libTargetELF.findSymbol("_ZN7android11AudioRecord4stopEv");
-    LOGI("AudioRecord::stop Symbol at %p (%s)", (void*) obtainBuffer_symbol, "_ZN7android11AudioRecord4stopEv");
+    uintptr_t obtainBuffer_symbol = HookCompat::get_obtainBuffer_symbol(g_libTargetELF);
+    LOGI("AudioRecord::obtainBuffer at %p", (void*) obtainBuffer_symbol);
+    uintptr_t stop_symbol = HookCompat::get_stop_symbol(g_libTargetELF);
+    LOGI("AudioRecord::stop at %p", (void*) obtainBuffer_symbol);
 
     hook_func((void*) obtainBuffer_symbol, (void*) obtainBuffer_hook, (void**) &obtainBuffer_backup);
     hook_func((void*) stop_symbol, (void*) stop_hook, (void**) &stop_backup);
