@@ -42,10 +42,8 @@ PhantomBridge* g_phantomBridge;
 HookFunType hook_func;
 UnhookFunType unhook_func;
 
-bool need_log = true;
 size_t acc_frame_count = 0;
 int acc_offset = 0;
-JNIEnv* obtainBuffer_env = nullptr;
 
 int32_t (*obtainBuffer_backup)(void*, void*, void*, void*, void*);
 int32_t  obtainBuffer_hook(void* v0, void* v1, void* v2, void* v3, void* v4) {
@@ -78,13 +76,6 @@ void  stop_hook(void* thiz) {
 
 int (*log_backup)(int prio, const char* tag, const char* fmt, ...);
 int  log_hook(int prio, const char* tag, const char* fmt, ...) {
-//    if (strstr(format, "inputSource %d, sampleRate %u, format %#x, channelMask %#x, frameCount %zu") != nullptr) {
-//        unhook_func((void*) __android_log_print);
-//
-//        LOGI("Found out target");
-//
-//        hook_func((void*) __android_log_print, (void*) vsnprintf_hook, (void**) &vsnprintf_backup);
-//    }
     va_list args;
     va_start(args, fmt);
     int result = __android_log_vprint(prio, tag, fmt, args);
@@ -113,19 +104,6 @@ int  log_hook(int prio, const char* tag, const char* fmt, ...) {
 
     return result;
 }
-
-//
-//void __android_log_print_hook(user_pt_regs* regs) {
-//    if (regs->regs[1] != 0) {
-//        if (strcmp(reinterpret_cast<const char *>(regs->regs[1]), LOG_TAG) == 0) {
-//            return;
-//        }
-//
-//        if (strcmp(reinterpret_cast<const char *>(regs->regs[1]), "AudioRecord") == 0) {
-//            LOGI("Found our target %");
-//        }
-//    }
-//}
 
 void on_library_loaded(const char *name, void *handle) {
 //    LOGI("Library Loaded %s", name);
