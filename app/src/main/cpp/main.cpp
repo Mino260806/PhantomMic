@@ -1,6 +1,3 @@
-//
-// Created by 双草酸酯 on 2/8/21.
-//
 #include <jni.h>
 #include <dlfcn.h>
 #include <sys/socket.h>
@@ -13,9 +10,6 @@
 #include <fstream>
 #include <thread>
 #include <codecvt>
-
-#include <SLES/OpenSLES.h>
-#include <SLES/OpenSLES_Android.h>
 
 #include "logging.h"
 #include "native_api.h"
