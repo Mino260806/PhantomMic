@@ -32,6 +32,7 @@ public class FileManager {
         ParcelFileDescriptor tobeClosedBackup = tobeClosed;
         FileDescriptor fd = open(parent, fileName);
         if (fd == null) {
+            Logger.d("fd is null");
             return null;
         }
 
@@ -52,7 +53,8 @@ public class FileManager {
             tobeClosed = tobeClosedBackup;
 
             return line;
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            Logger.d(e.getMessage());
         }
 
         return null;
@@ -154,7 +156,8 @@ public class FileManager {
         try {
             FileInputStream fin = new FileInputStream(uri.getPath());
             return fin.getFD();
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            Logger.d(e.getMessage());
         }
         return null;
     }

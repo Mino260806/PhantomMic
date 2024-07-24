@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.media.AudioRecord;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 
@@ -91,10 +92,19 @@ public class MainHook implements IXposedHookLoadPackage {
 
     private void initPhantomManager(Context context) {
         phantomManager = new PhantomManager(context, isNativeHook());
+        if (isSpecialCase()) {
+            phantomManager.forceUriPath();
+//            phantomManager.updateAudioFormat(16000, 2, 1);
+//            phantomManager.load();
+        }
+    }
+
+    private boolean isSpecialCase() {
+        return packageName.equals("com.whatsapp")
+                || packageName.equals("com.android.soundrecorder");
     }
 
     public boolean isNativeHook() {
-//        return packageName.equals("com.whatsapp");
         return true;
     }
 }

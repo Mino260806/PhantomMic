@@ -62,7 +62,16 @@ public class PhantomManager {
 //            intent.getExtras().remove(KEY_INTENT_FILE);
 //        }
     }
+
+    public void forceUriPath() {
+        ensureHasUriPath();
+    }
+
     public void prepare(Activity activity) {
+        if (mUriPath != null) {
+            return;
+        }
+
         mNeedPrepare = false;
         if (mSPManager.getUriPath() == null) {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
@@ -96,7 +105,7 @@ public class PhantomManager {
         Logger.d("PhantomManager.prepare done");
     }
 
-    private Uri getDefaultUriPath() {
+    public Uri getDefaultUriPath() {
         File defaultPath = new File(Environment.getExternalStorageDirectory(), DEFAULT_RECORDINGS_PATH);
         return Uri.fromFile(defaultPath);
     }
