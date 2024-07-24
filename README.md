@@ -60,7 +60,7 @@ music.mp3
 
 ## Requirements
 
-- Android 7+ Arm64 (x86 coming soon)
+- Android 7+
 
 - [Root] LSPosed / Edxposed
 

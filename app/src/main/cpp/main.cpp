@@ -14,9 +14,17 @@
 #include "logging.h"
 #include "native_api.h"
 #include "KittyMemory/KittyInclude.hpp"
+
+#ifdef __aarch64__
 #include "InlineHook/InlineHook.hpp"
+#endif
+
 #include "PhantomBridge.h"
 #include "hook_compat.h"
+
+struct UnknownArgs {
+    char data[1024];
+};
 
 jobject j_phantomManager;
 
@@ -62,33 +70,31 @@ void  stop_hook(void* thiz) {
     g_phantomBridge->unload(env);
 }
 
-int (*log_backup)(int prio, const char* tag, const char* fmt, ...);
-int  log_hook(int prio, const char* tag, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int result = __android_log_vprint(prio, tag, fmt, args);
+int32_t (*set_backup)(void* thiz, int32_t inputSource, uint32_t sampleRate, uint32_t format,
+                      uint32_t channelMask, size_t frameCount, void* callback_ptr, void* callback_refs,
+                      uint32_t notificationFrames, bool threadCanCallJava, int32_t sessionId,
+                      int transferType, uint32_t flags, uint32_t uid, int32_t pid, void* pAttributes,
+                      int selectedDeviceId, int selectedMicDirection, float microphoneFieldDimension,
+                      int32_t maxSharedAudioHistoryMs);
+int32_t set_hook(void* thiz, int32_t inputSource, uint32_t sampleRate, uint32_t format,
+                 uint32_t channelMask, size_t frameCount, void* callback_ptr, void* callback_refs,
+                 uint32_t notificationFrames, bool threadCanCallJava, int32_t sessionId,
+                 int transferType, uint32_t flags, uint32_t uid, int32_t pid, void* pAttributes,
+                 int selectedDeviceId, int selectedMicDirection, float microphoneFieldDimension,
+                 int32_t maxSharedAudioHistoryMs) {
 
-    if (tag != nullptr && strcmp(tag, "AudioRecord") == 0
-            && strstr(fmt, "inputSource %d, sampleRate %u, format %#x, channelMask %#x, frameCount %zu") != nullptr) {
-        va_arg(args, char*);
-        int inputSource = va_arg(args, int);
-        int sampleRate = va_arg(args, int);
-        int audioFormat = va_arg(args, int);
-        int channelMask = va_arg(args, int);
-        int frameCount = va_arg(args, int);
+    int32_t result = set_backup(thiz, inputSource, sampleRate, format, channelMask, frameCount,
+                                callback_ptr, callback_refs, notificationFrames, threadCanCallJava,
+                                sessionId, transferType, flags, uid, pid, pAttributes,
+                                selectedDeviceId, selectedMicDirection, microphoneFieldDimension,
+                                maxSharedAudioHistoryMs);
 
-        LOGI("Sample Rate: %d", sampleRate);
-        LOGI("Audio Format: %d", audioFormat);
-        LOGI("Channel Mask: %d", channelMask);
-        LOGI("Frame Count: %d", frameCount);
+    LOGI("AudioRecord::set(...): %d", result);
 
-        JNIEnv* env;
-        JVM->AttachCurrentThread(&env, nullptr);
-        g_phantomBridge->update_audio_format(env, sampleRate, audioFormat, channelMask);
-        g_phantomBridge->load(env);
-    }
-
-    va_end(args);
+    JNIEnv* env;
+    JVM->AttachCurrentThread(&env, nullptr);
+    g_phantomBridge->update_audio_format(env, sampleRate, format, channelMask);
+    g_phantomBridge->load(env);
 
     return result;
 }
@@ -126,6 +132,8 @@ Java_tn_amin_phantom_1mic_PhantomManager_nativeHook(JNIEnv *env, jobject thiz) {
 
     ElfScanner g_libTargetELF = ElfScanner::createWithPath(HookCompat::get_library_name());
 
+    uintptr_t set_symbol = HookCompat::get_set_symbol(g_libTargetELF);
+    LOGI("AudioRecord::set at %p", (void*) set_symbol);
     uintptr_t obtainBuffer_symbol = HookCompat::get_obtainBuffer_symbol(g_libTargetELF);
     LOGI("AudioRecord::obtainBuffer at %p", (void*) obtainBuffer_symbol);
     uintptr_t stop_symbol = HookCompat::get_stop_symbol(g_libTargetELF);
@@ -133,7 +141,7 @@ Java_tn_amin_phantom_1mic_PhantomManager_nativeHook(JNIEnv *env, jobject thiz) {
 
     hook_func((void*) obtainBuffer_symbol, (void*) obtainBuffer_hook, (void**) &obtainBuffer_backup);
     hook_func((void*) stop_symbol, (void*) stop_hook, (void**) &stop_backup);
-    hook_func((void*) __android_log_print, (void*) log_hook, (void**) &log_backup);
+    hook_func((void*) set_symbol, (void*) set_hook, (void**) &set_backup);
 }
 
 extern "C"
