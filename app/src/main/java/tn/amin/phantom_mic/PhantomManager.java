@@ -33,7 +33,6 @@ public class PhantomManager {
     private static final int REQUEST_CODE = 2608;
 
     private Uri mUriPath;
-    private ParcelFileDescriptor tobeClosed = null;
 
     private final WeakReference<Context> mContext;
 
