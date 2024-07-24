@@ -42,6 +42,7 @@ PhantomBridge* g_phantomBridge;
 HookFunType hook_func;
 UnhookFunType unhook_func;
 
+int need_log = 5;
 size_t acc_frame_count = 0;
 int acc_offset = 0;
 
@@ -53,11 +54,14 @@ int32_t  obtainBuffer_hook(void* v0, void* v1, void* v2, void* v3, void* v4) {
     size_t frameSize = size / frameCount;
     char* raw = * (char**) ((uintptr_t) v1 + sizeof(size_t) * 2);
 
-    if (g_phantomBridge->overwrite_buffer(raw, size)) {
+    if (g_phantomBridge->overwrite_buffer(raw, size) && need_log > 0) {
         LOGI("Overwritten data");
     }
 
-    LOGI("[%zu] Inside obtainBuffer (%zu x %zu = %zu)", acc_frame_count, frameCount, frameSize, size);
+    if (need_log > 0) {
+        need_log--;
+        LOGI("[%zu] Inside obtainBuffer (%zu x %zu = %zu)", acc_frame_count, frameCount, frameSize, size);
+    }
 
     acc_frame_count += frameCount;
     acc_offset += size;

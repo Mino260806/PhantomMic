@@ -31,6 +31,8 @@ private:
     int m_buffer_write_position = 0;
     int m_buffer_read_position = 0;
     jbyte* m_buffer = nullptr;
+
+    int mAudioFormat = 0x1;
 };
 
 #endif //PHANTOMMIC_PHANTOMBRIDGE_H

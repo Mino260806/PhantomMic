@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <malloc.h>
 #include <memory>
+#include <assert.h>
 #include "PhantomBridge.h"
 #include "../logging.h"
 
@@ -32,6 +33,8 @@ void PhantomBridge::update_audio_format(JNIEnv* env, int sampleRate, int audioFo
     jclass j_phantomManagerClass = env->GetObjectClass(j_phantomManager);
     jmethodID method = env->GetMethodID(j_phantomManagerClass, "updateAudioFormat", "(III)V");
     env->CallVoidMethod(j_phantomManager, method, sampleRate, channelMask, audioFormatToJava(audioFormat));
+
+    mAudioFormat = audioFormat;
 }
 
 void PhantomBridge::load(JNIEnv *env) {
@@ -52,8 +55,24 @@ void PhantomBridge::on_buffer_chunk_loaded(jbyte *buffer, jsize size) {
         m_buffer = (jbyte*) realloc(m_buffer, m_buffer_size);
     }
 
-    memcpy(m_buffer + m_buffer_write_position, buffer, size);
-    m_buffer_write_position += size;
+    // PCM_FLOAT
+    if (mAudioFormat == 0x5u) {
+        float* dst_float = reinterpret_cast<float*>(m_buffer);
+        int16_t* src16 = reinterpret_cast<int16_t*>(buffer);
+        size_t n_samples = size / sizeof(int16_t);
+        for (size_t i = 0; i < n_samples; ++i) {
+            dst_float[i + m_buffer_write_position / sizeof(float)] = src16[i] / 32768.0f;
+        }
+        m_buffer_write_position += n_samples * sizeof(float);
+    }
+    // PCM_16_BIT
+    else {
+        if (mAudioFormat != 0x2) {
+            LOGW("Unsupported audio format %d", mAudioFormat);
+        }
+        memcpy(m_buffer + m_buffer_write_position, buffer, size);
+        m_buffer_write_position += size;
+    }
 }
 
 bool PhantomBridge::overwrite_buffer(char* buffer, int size) {
