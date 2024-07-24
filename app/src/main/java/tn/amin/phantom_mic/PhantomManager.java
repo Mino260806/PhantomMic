@@ -81,6 +81,7 @@ public class PhantomManager {
             }
 
             ActivityResultWrapper arWrapper = new ActivityResultWrapper(activity, REQUEST_CODE);
+            Toast.makeText(mContext.get(), "PhantomMic: Chose recordings folder", Toast.LENGTH_LONG).show();
             arWrapper.start(intent, (resultCode, resultData) -> {
                 if (resultCode == Activity.RESULT_OK) {
                     if (resultData != null && resultData.getData() != null) {
