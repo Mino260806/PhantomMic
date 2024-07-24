@@ -42,7 +42,7 @@ public class PhantomManager {
     private final FileManager mFileManager;
     private boolean mNeedPrepare = true;
 
-    public PhantomManager(Context context) {
+    public PhantomManager(Context context, boolean isNativeHook) {
         Logger.d("Init phantom manager");
 
         mContext = new WeakReference<>(context);
@@ -50,6 +50,10 @@ public class PhantomManager {
         mAudioMaster = new AudioMaster();
         mSPManager = new SPManager(context);
         mFileManager = new FileManager(context);
+
+        if (isNativeHook) {
+            nativeHook();
+        }
     }
 
     public void interceptIntent(Intent intent) {
@@ -58,7 +62,16 @@ public class PhantomManager {
 //            intent.getExtras().remove(KEY_INTENT_FILE);
 //        }
     }
+
+    public void forceUriPath() {
+        ensureHasUriPath();
+    }
+
     public void prepare(Activity activity) {
+        if (mUriPath != null) {
+            return;
+        }
+
         mNeedPrepare = false;
         if (mSPManager.getUriPath() == null) {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
@@ -92,13 +105,13 @@ public class PhantomManager {
         Logger.d("PhantomManager.prepare done");
     }
 
-    private Uri getDefaultUriPath() {
+    public Uri getDefaultUriPath() {
         File defaultPath = new File(Environment.getExternalStorageDirectory(), DEFAULT_RECORDINGS_PATH);
         return Uri.fromFile(defaultPath);
     }
 
-    public void updateAudioFormat(int sampleRate, int channelConfig, int encoding) {
-        mAudioMaster.setFormat(sampleRate, channelConfig, encoding);
+    public void updateAudioFormat(int sampleRate, int channelMask, int encoding) {
+        mAudioMaster.setFormat(sampleRate, channelMask, encoding);
         Logger.d("Target: " + sampleRate + "Hz, encoding " + encoding + ", channel count " + mAudioMaster.getFormat().getChannelCount());
     }
 
@@ -140,19 +153,9 @@ public class PhantomManager {
         return mContext.get().getContentResolver();
     }
 
-    public boolean onDataRead(byte[] audioData, int i, int bytesRead) {
-        return mAudioMaster.getData(audioData, 0, bytesRead);
-    }
-
-    public boolean onDataRead(short[] audioData, int i, int bytesRead) {
-        return mAudioMaster.getData(audioData, 0, bytesRead);
-    }
-
-    public boolean onDataRead(float[] audioData, int i, int bytesRead) {
-        return mAudioMaster.getData(audioData, 0, bytesRead);
-    }
-
     public boolean needPrepare() {
         return mNeedPrepare;
     }
+
+    private native void nativeHook();
 }

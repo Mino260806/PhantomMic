@@ -4,7 +4,7 @@
 #include <android/log.h>
 
 #ifndef LOG_TAG
-#define LOG_TAG    "XPOSED_LAB"
+#define LOG_TAG    "PHANTOM_MIC"
 #endif
 
 #ifdef LOG_DISABLED
