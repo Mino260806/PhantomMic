@@ -67,7 +67,7 @@ void PhantomBridge::on_buffer_chunk_loaded(jbyte *buffer, jsize size) {
     }
     // PCM_16_BIT
     else {
-        if (mAudioFormat != 0x2) {
+        if (mAudioFormat != 0x1) {
             LOGW("Unsupported audio format %d", mAudioFormat);
         }
         memcpy(m_buffer + m_buffer_write_position, buffer, size);
