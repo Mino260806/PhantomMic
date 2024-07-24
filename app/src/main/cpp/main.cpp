@@ -25,16 +25,6 @@
 #include "PhantomBridge.h"
 #include "hook_compat.h"
 
-extern "C" {
-    #include "ffmpeg/libavformat/avformat.h"
-    #include "ffmpeg/libavcodec/avcodec.h"
-    #include "ffmpeg/libavutil/avutil.h"
-    #include "ffmpeg/libavutil/imgutils.h"
-    #include "ffmpeg/libavutil/channel_layout.h"
-    #include "ffmpeg/libavutil/frame.h"
-    #include "ffmpeg/libswresample/swresample.h"
-};
-
 jobject j_phantomManager;
 
 JavaVM* JVM;
