@@ -11,15 +11,16 @@ https://github.com/user-attachments/assets/12a9d229-fd8a-4370-b969-1a342360abdf
 
 ## Tested Apps
 
-| Application        | Status        |
-| ------------------ | ------------- |
-| Facebook Messenger | ✔ Working     |
-| Discord            | ✔ Working     |
-| Telegram           | ✔ Working     |
-| Whatsapp           | ❌ Not working |
-| .. You tell me!    |               |
+| Application        | Status    |
+| ------------------ | --------- |
+| Facebook Messenger | ✔ Working |
+| Discord            | ✔ Working |
+| Telegram           | ✔ Working |
+| Whatsapp **        | ✔ Working |
+| Google Chrome      | ✔ Working |
+| .. You tell me!    |           |
 
-Read **Developer Notes** for not working apps
+App ** : Recordings folder defaults to /sdcard/Android/data/app_id/files/Recordings because chose folder dialog doesn't work
 
 Note: your app might work if it's not on the list, let us know if you tried it!
 
@@ -59,7 +60,7 @@ music.mp3
 
 ## Requirements
 
-- Android 7+
+- Android 7+ Arm64 (x86 coming soon)
 
 - [Root] LSPosed / Edxposed
 
@@ -67,17 +68,7 @@ music.mp3
 
 ## Developer Notes
 
-The following hooks where implemented
-
-- [x] android.media.AudioRecord
-
-- [ ] android.media.MediaRecorder
-
-- [ ] native hook
-
-In the apps I tested, I found AudioRecord was used for most of them for streaming audio. As for the native hook (which would make phantom mic work on almost ANY app), I had a solution working on my device, but it's very tedious to bring compatibility to all android versions as the internal APIs on which my solution relies change frequently see [AudioRecord.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libaudioclient/AudioRecord.cpp;l=1?q=AudioRecord.cpp&sq=&ss=android%2Fplatform%2Fsuperproject%2Fmain),
-
-If you want to give it a shot, clone the branch native_hook and edit main.cpp (also return true in MainHook.isNativeHook)
+The app relies on native hooking [AudioRecord.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libaudioclient/AudioRecord.cpp;l=1?q=AudioRecord.cpp&sq=&ss=android%2Fplatform%2Fsuperproject%2Fmain), feel free to take a look at the source code!
 
 # Links
 
