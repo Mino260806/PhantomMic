@@ -34,6 +34,8 @@ Note: your app might work if it's not on the list, let us know if you tried it!
 
 - Inside the chosen folder create a new file phantom.txt, write the name of your target audio file (without extension is also fine) and save it. The file can be left empty if you want to use your microphone as normal.
   
+  Note: If the target records audio to a file, there is a chance the module won't work. This is intentional because the main purpose is using it in calls.
+  
   **<u>Bonus Tip:</u>** use an app like *MacroDroid* or *Tasker* to automate the process
 
 <details>
@@ -65,6 +67,16 @@ music.mp3
 - [Root] LSPosed / Edxposed
 
 - [No Root] LSPatch theoretically works but not tested
+
+
+
+## Module not working ?
+
+Please open a github issue. 
+
+- If the app is labelled as "Working" in **Tested Apps**. Please attach libaudioclient.so, you can copy it from `/system/lib` or `/system/lib64, alongside logs.
+
+- Otherwise send play store version of the app and explain how I can test it
 
 ## Developer Notes
 
