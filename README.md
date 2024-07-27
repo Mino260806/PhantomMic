@@ -18,9 +18,10 @@ https://github.com/user-attachments/assets/12a9d229-fd8a-4370-b969-1a342360abdf
 | Telegram           | ✔ Working |
 | Whatsapp **        | ✔ Working |
 | Google Chrome      | ✔ Working |
+| IMO                | ✔ Working |
 | .. You tell me!    |           |
 
-App ** : Recordings folder defaults to /sdcard/Android/data/app_id/files/Recordings because chose folder dialog doesn't work
+App ** : Recordings folder defaults to Android/data/app_id/files/Recordings because chose folder dialog doesn't work
 
 Note: your app might work if it's not on the list, let us know if you tried it!
 
