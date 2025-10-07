@@ -71,20 +71,20 @@ void  stop_hook(void* thiz) {
 }
 
 int32_t (*set_backup)(void* thiz, int32_t inputSource, uint32_t sampleRate, uint32_t format,
-                      uint32_t channelMask, size_t frameCount, void* callback_ptr, void* callback_refs,
+                      uint32_t channelMask, size_t frameCount, void* callback_ptr,
                       uint32_t notificationFrames, bool threadCanCallJava, int32_t sessionId,
                       int transferType, uint32_t flags, uint32_t uid, int32_t pid, void* pAttributes,
                       int selectedDeviceId, int selectedMicDirection, float microphoneFieldDimension,
                       int32_t maxSharedAudioHistoryMs);
 int32_t set_hook(void* thiz, int32_t inputSource, uint32_t sampleRate, uint32_t format,
-                 uint32_t channelMask, size_t frameCount, void* callback_ptr, void* callback_refs,
+                 uint32_t channelMask, size_t frameCount, void* callback_ptr,
                  uint32_t notificationFrames, bool threadCanCallJava, int32_t sessionId,
                  int transferType, uint32_t flags, uint32_t uid, int32_t pid, void* pAttributes,
                  int selectedDeviceId, int selectedMicDirection, float microphoneFieldDimension,
                  int32_t maxSharedAudioHistoryMs) {
 
     int32_t result = set_backup(thiz, inputSource, sampleRate, format, channelMask, frameCount,
-                                callback_ptr, callback_refs, notificationFrames, threadCanCallJava,
+                                callback_ptr, notificationFrames, threadCanCallJava,
                                 sessionId, transferType, flags, uid, pid, pAttributes,
                                 selectedDeviceId, selectedMicDirection, microphoneFieldDimension,
                                 maxSharedAudioHistoryMs);
